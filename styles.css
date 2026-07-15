@@ -21,17 +21,17 @@
   /* ink */
   --ink:       #14202B;
   --ink-soft:  #465562;
-  --ink-faint: #647483;
+  --ink-faint: #5C6B79;   /* AA on bg/panel/panel2 (>=4.8) */
 
   /* signal accent (teal/cyan) — NOT evensplit green */
   --signal:    #0E9E88;   /* large / decorative */
-  --signal-dk: #0B7E6D;   /* body-text + buttons (AA on white) */
+  --signal-dk: #0A7364;   /* body-text + buttons (AA on white AND signal-wash) */
   --signal-wash: #E1F3EF;
 
   /* semantic */
   --cause:     #9A6212;   /* amber for causes (AA on white) */
   --cause-wash:#FBEFD9;
-  --fix:       #0B7E6D;   /* fixes reuse signal */
+  --fix:       #0A7364;   /* fixes reuse signal */
   --err:       #C6392B;   /* the error line / coral */
   --err-wash:  #FBE7E4;
 
