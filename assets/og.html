@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg:      #0F1720;
+    --panel:   #151E28;
+    --panel2:  #101922;
+    --rule:    #26313C;
+    --ink:     #E9EEF2;
+    --ink-soft:#AEB9C4;
+    --ink-faint:#8593A0;
+    --signal:  #3BE0C6;
+    --cause:   #F2B65A;
+    --err:     #FF8575;
+    --code:    #C7D3DE;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "JetBrains Mono", "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    position: relative;
+    background:
+      radial-gradient(1000px 560px at 88% -14%, rgba(59,224,198,0.16), transparent 58%),
+      radial-gradient(620px 420px at -4% 108%, rgba(242,182,90,0.10), transparent 60%),
+      var(--bg);
+    font-family: var(--sans);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* faint scanlines — the signal motif */
+  .scan { position: absolute; inset: 0; opacity: 0.5; }
+  .scan line { stroke: #1A2531; stroke-width: 1.2; }
+
+  .frame {
+    position: absolute; inset: 0;
+    padding: 66px 74px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 30px;
+  }
+
+  /* top: wordmark + tagline */
+  .top { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 18px; }
+  .brand svg { width: 62px; height: 62px; }
+  .brand .word { font-family: var(--mono); font-size: 44px; font-weight: 800; letter-spacing: -0.04em; color: var(--ink); }
+  .brand .word b { color: var(--signal); font-weight: 800; }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 17px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* middle: the terminal window — the transformation */
+  .term {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    box-shadow: 0 40px 80px -40px rgba(0,0,0,0.7);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .term__bar {
+    display: flex; align-items: center; gap: 9px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--panel2);
+  }
+  .dot { width: 13px; height: 13px; border-radius: 50%; }
+  .dot--r { background: #FF6058; } .dot--y { background: #FFBD2E; } .dot--g { background: #29C93F; }
+  .term__title { margin-left: 12px; font-family: var(--mono); font-size: 16px; color: var(--ink-faint); }
+  .term__body { padding: 26px 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center; }
+
+  /* left half: the pasted error (with a lens reticle over it) */
+  .paste { position: relative; }
+  .paste__label { font-family: var(--mono); font-size: 15px; color: var(--ink-faint); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+  .errline {
+    font-family: var(--mono); font-size: 20px; line-height: 1.5;
+    color: var(--code);
+  }
+  .errline .cls { color: var(--err); font-weight: 700; }
+  .errline .dim { color: var(--ink-faint); }
+  .reticle {
+    position: absolute; right: -6px; top: 30px;
+    width: 116px; height: 116px;
+  }
+  .reticle circle { fill: none; stroke: var(--signal); }
+  .reticle line { stroke: var(--signal); stroke-linecap: round; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; }
+  .arrow svg { width: 46px; height: 46px; }
+
+  /* right half: the reading */
+  .read__label { font-family: var(--mono); font-size: 15px; color: var(--signal); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+  .read__title { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); line-height: 1.15; }
+  .read__row { display: flex; align-items: baseline; gap: 12px; margin-top: 16px; }
+  .read__pip {
+    font-family: var(--mono); font-size: 13px; font-weight: 800;
+    color: #0F1720; background: var(--signal);
+    border-radius: 6px; padding: 2px 8px; flex: none;
+  }
+  .read__pip--c { background: var(--cause); }
+  .read__text { font-size: 18px; color: var(--ink-soft); line-height: 1.4; }
+
+  /* bottom: promise strip */
+  .foot { display: flex; align-items: center; justify-content: space-between; }
+  .foot__line { font-size: 24px; font-weight: 600; color: var(--ink-soft); letter-spacing: -0.01em; }
+  .foot__line b { color: var(--ink); font-weight: 800; }
+  .foot__tags { display: flex; gap: 9px; }
+  .foot__tags span {
+    font-family: var(--mono); font-size: 15px; font-weight: 600;
+    color: var(--ink-soft); border: 1px solid var(--rule); border-radius: 999px; padding: 5px 13px;
+  }
+</style>
+</head>
+<body>
+  <svg class="scan" viewBox="0 0 1200 630" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="0" y1="140" x2="1200" y2="140"/>
+    <line x1="0" y1="250" x2="1200" y2="250"/>
+    <line x1="0" y1="380" x2="1200" y2="380"/>
+    <line x1="0" y1="500" x2="1200" y2="500"/>
+  </svg>
+
+  <div class="frame">
+    <div class="top">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#151E28" stroke="#26313C"/>
+          <circle cx="14" cy="14" r="7.5" fill="none" stroke="#3BE0C6" stroke-width="2.4"/>
+          <line x1="19.4" y1="19.4" x2="26" y2="26" stroke="#3BE0C6" stroke-width="2.8" stroke-linecap="round"/>
+          <line x1="14" y1="9.5" x2="14" y2="18.5" stroke="#3BE0C6" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>
+          <line x1="9.5" y1="14" x2="18.5" y2="14" stroke="#3BE0C6" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>
+        </svg>
+        <span class="word">err<b>lens</b></span>
+      </div>
+      <span class="kicker">error&nbsp;explainer</span>
+    </div>
+
+    <div class="term">
+      <div class="term__bar">
+        <span class="dot dot--r"></span><span class="dot dot--y"></span><span class="dot dot--g"></span>
+        <span class="term__title">stacktrace &mdash; diagnosed locally</span>
+      </div>
+      <div class="term__body">
+        <div class="paste">
+          <div class="paste__label">You paste</div>
+          <div class="errline">
+            <span class="cls">TypeError</span>: Cannot read<br>
+            properties of <span class="cls">undefined</span><br>
+            <span class="dim">(reading 'name')</span>
+          </div>
+          <svg class="reticle" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="40" stroke-width="2.4" opacity="0.9"/>
+            <circle cx="60" cy="60" r="54" stroke-width="1.2" opacity="0.4"/>
+            <line x1="60" y1="8" x2="60" y2="26" stroke-width="2.2"/>
+            <line x1="60" y1="94" x2="60" y2="112" stroke-width="2.2"/>
+            <line x1="8" y1="60" x2="26" y2="60" stroke-width="2.2"/>
+            <line x1="94" y1="60" x2="112" y2="60" stroke-width="2.2"/>
+          </svg>
+        </div>
+
+        <div class="read">
+          <div class="read__label">errlens reads</div>
+          <div class="read__title">Reading a property of undefined</div>
+          <div class="read__row">
+            <span class="read__pip read__pip--c">CAUSE</span>
+            <span class="read__text">The value you expected isn't there yet.</span>
+          </div>
+          <div class="read__row">
+            <span class="read__pip">FIX</span>
+            <span class="read__text">Guard it: <b style="font-family:var(--mono);color:var(--code)">obj?.prop</b>, or await the data first.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="foot__line"><b>What it means, the likely cause, how to fix it.</b> Private &amp; offline.</div>
+      <div class="foot__tags"><span>JS</span><span>Python</span><span>Go</span><span>Rust</span><span>HTTP</span></div>
+    </div>
+  </div>
+
+  <!-- arrow between the two halves, absolutely centred over the gap -->
+  <svg style="position:absolute; left:598px; top:388px; width:46px; height:46px;" viewBox="0 0 46 46" aria-hidden="true">
+    <circle cx="23" cy="23" r="22" fill="#0F1720" stroke="#26313C" stroke-width="1.5"/>
+    <path d="M16 23 H30 M25 18 L31 23 L25 28" fill="none" stroke="#3BE0C6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</body>
+</html>
